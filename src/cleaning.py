@@ -7,7 +7,11 @@ import numpy as np
 
 
 def fix_data_types(df):
-    # Make a copy so we don't change the original
+    """
+    Cast raw columns to their expected data types.
+    Converts Date_reported to datetime, text columns to stripped strings,
+    and surveillance counts to numeric values.
+    """
     cleaned = df.copy()
 
     # Convert the date column from string to actual date format
@@ -15,65 +19,94 @@ def fix_data_types(df):
 
     # Clean up text columns by stripping extra spaces
     for col in ["Country_code", "Country", "WHO_region"]:
-        cleaned[col] = cleaned[col].astype(str).str.strip()
+        if col in cleaned.columns:
+            cleaned[col] = cleaned[col].astype(str).str.strip()
 
     # Convert case and death columns to numbers
     for col in ["New_cases", "Cumulative_cases", "New_deaths", "Cumulative_deaths"]:
-        cleaned[col] = pd.to_numeric(cleaned[col], errors="coerce")
+        if col in cleaned.columns:
+            cleaned[col] = pd.to_numeric(cleaned[col], errors="coerce")
 
     return cleaned
 
 
 def standardize_categories(df):
-    # Fill blank WHO regions with OTHER
+    """
+    Standardize categorical codes across the dataset.
+    Fills missing or empty WHO regions with 'OTHER' and blank country
+    codes with 'XX' (unknown).
+    """
     cleaned = df.copy()
-    cleaned["WHO_region"] = cleaned["WHO_region"].replace({"": "OTHER", "nan": "OTHER"})
-    cleaned["WHO_region"] = cleaned["WHO_region"].fillna("OTHER")
-    cleaned["WHO_region"] = cleaned["WHO_region"].str.upper()
+    if "WHO_region" in cleaned.columns:
+        cleaned["WHO_region"] = cleaned["WHO_region"].replace({"": "OTHER", "nan": "OTHER", "None": "OTHER"})
+        cleaned["WHO_region"] = cleaned["WHO_region"].fillna("OTHER")
+        cleaned["WHO_region"] = cleaned["WHO_region"].str.upper()
 
-    # Fill blank country codes with XX (unknown)
-    cleaned["Country_code"] = cleaned["Country_code"].replace({"": "XX", "nan": "XX"})
-    cleaned["Country_code"] = cleaned["Country_code"].fillna("XX")
-    cleaned["Country_code"] = cleaned["Country_code"].str.upper()
+    if "Country_code" in cleaned.columns:
+        cleaned["Country_code"] = cleaned["Country_code"].replace({"": "XX", "nan": "XX", "None": "XX"})
+        cleaned["Country_code"] = cleaned["Country_code"].fillna("XX")
+        cleaned["Country_code"] = cleaned["Country_code"].str.upper()
+
+    if "Country" in cleaned.columns:
+        cleaned["Country"] = cleaned["Country"].str.strip()
 
     return cleaned
 
 
 def handle_missing_values(df):
-    # If New_cases or New_deaths is empty it means zero was reported that week
+    """
+    Impute missing values in numeric surveillance columns.
+    In the WHO surveillance format, empty cells represent zero cases or
+    deaths reported during that week, so they are imputed with 0.0.
+    """
     cleaned = df.copy()
     for col in ["New_cases", "New_deaths", "Cumulative_cases", "Cumulative_deaths"]:
-        cleaned[col] = cleaned[col].fillna(0.0)
+        if col in cleaned.columns:
+            cleaned[col] = cleaned[col].fillna(0.0)
     return cleaned
 
 
 def handle_duplicates(df):
-    # Remove rows where the same country appears twice on the same date
+    """
+    Remove duplicate surveillance records based on (Date_reported, Country).
+    Keeps the first occurrence and returns the deduplicated DataFrame and
+    the number of removed rows.
+    """
     cleaned = df.copy()
     before = len(cleaned)
-    cleaned = cleaned.drop_duplicates(subset=["Date_reported", "Country"], keep="first")
+    subset = ["Date_reported", "Country"] if {"Date_reported", "Country"}.issubset(cleaned.columns) else None
+    cleaned = cleaned.drop_duplicates(subset=subset, keep="first")
     cleaned = cleaned.reset_index(drop=True)
     removed = before - len(cleaned)
     return cleaned, removed
 
 
 def handle_outliers(df):
-    # WHO sometimes sends negative numbers to correct old data
-    # We clip them to 0 because a negative count makes no sense for analysis
+    """
+    Handle negative values in New_cases and New_deaths.
+    Negative numbers in WHO data reflect retrospective downward corrections
+    from local health authorities. They are clipped to 0.0 using np.maximum.
+    """
     cleaned = df.copy()
-    neg_cases = int((cleaned["New_cases"] < 0).sum())
-    neg_deaths = int((cleaned["New_deaths"] < 0).sum())
+    counts = {}
 
-    # np.maximum returns element-wise max between the value and 0
-    cleaned["New_cases"] = np.maximum(cleaned["New_cases"], 0.0)
-    cleaned["New_deaths"] = np.maximum(cleaned["New_deaths"], 0.0)
+    if "New_cases" in cleaned.columns:
+        counts["negative_new_cases"] = int((cleaned["New_cases"] < 0).sum())
+        cleaned["New_cases"] = np.maximum(cleaned["New_cases"], 0.0)
 
-    counts = {"negative_new_cases": neg_cases, "negative_new_deaths": neg_deaths}
+    if "New_deaths" in cleaned.columns:
+        counts["negative_new_deaths"] = int((cleaned["New_deaths"] < 0).sum())
+        cleaned["New_deaths"] = np.maximum(cleaned["New_deaths"], 0.0)
+
     return cleaned, counts
 
 
 def clean_dataset(raw_df):
-    # Run each cleaning step one by one
+    """
+    Run the complete sequential cleaning pipeline on raw input data.
+    Executes type casting, category standardization, missing value imputation,
+    duplicate removal, and outlier clipping. Returns cleaned data and metadata.
+    """
     info = {
         "raw_rows": len(raw_df),
         "raw_cols": len(raw_df.columns)

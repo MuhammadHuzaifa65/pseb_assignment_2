@@ -1,0 +1,6 @@
+Date_reported,Country_code,Country,WHO_region,New_cases,Cumulative_cases,Predicted_New_deaths
+2026-11-15,BR,Brazil,AMRO,15000,37800000,835.7
+2026-11-15,IN,India,SEARO,8000,45000000,816.3
+2026-11-15,FR,France,EURO,22000,40000000,406.1
+2026-11-15,EG,Egypt,EMRO,950,516000,20.9
+2026-11-15,AU,Australia,WPRO,11000,11800000,164.0

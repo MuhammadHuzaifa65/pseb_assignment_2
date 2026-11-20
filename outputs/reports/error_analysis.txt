@@ -1,0 +1,34 @@
+ERROR ANALYSIS - Random Forest
+==================================================
+Test MAE : 19.61 deaths/week
+Test R2  : 0.1092
+
+TOP 10 WORST PREDICTIONS
+Date_reported                  Country  New_deaths  Predicted        Error
+   2023-02-05                    China     47687.0     1249.1 46437.851099
+   2023-01-01                    China     17893.0     5226.0 12666.961238
+   2023-02-05                    Japan     10981.0      395.4 10585.579820
+   2023-01-08                    China     12991.0     4989.0  8002.036310
+   2023-01-15                    China         0.0     4801.9  4801.891786
+   2025-03-09                   Brazil        45.0     2583.6  2538.640479
+   2024-01-14 United States of America      2593.0      188.2  2404.755486
+   2024-01-07 United States of America      2500.0      188.2  2311.755486
+   2025-03-16                   Brazil        28.0     2216.9  2188.948515
+   2024-01-21 United States of America      2370.0      188.2  2181.755486
+
+WHY THE MODEL FAILS
+1. Some countries dump months of backlogged deaths in one week.
+   The model cannot predict a spike from same-week cases alone.
+2. Deaths usually peak 2-3 weeks after cases. Without lag features
+   the model underestimates deaths at the end of a wave.
+3. Small islands with 0 deaths give a small constant error.
+
+ERROR BY WHO REGION
+WHO_region  Rows  Avg_Deaths  Avg_Error
+      AFRO  9447    0.040860   1.911592
+      AMRO  9447   20.420239  29.015523
+      EMRO  4422    0.660561   6.059014
+      EURO 11055    9.529715  21.385295
+     OTHER  4824    0.018449   0.924702
+     SEARO  2211    2.862506  30.654659
+      WPRO  6834   17.370061  46.574804

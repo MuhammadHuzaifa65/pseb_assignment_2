@@ -1,0 +1,22 @@
+DATA QUALITY REPORT - WHO COVID-19 Pipeline
+==================================================
+Quality Gate: PASSED (100% pass rate)
+
+BEFORE vs AFTER CLEANING
+  Missing New_cases  : 0 -> 0 (filled with 0)
+  Missing New_deaths : 0 -> 0 (filled with 0)
+  Missing WHO_region : 0 -> 0 (labeled OTHER)
+  Negative cases     : 18 -> 0 (clipped)
+  Negative deaths    : 13 -> 0 (clipped)
+  Duplicates         : 0 removed
+
+VALIDATION RESULTS
+  Types check   : PASSED
+  Range check   : PASSED
+  Uniqueness    : PASSED
+  Null check    : PASSED
+
+SQLite JOIN FINDING
+  European Region had the most cases (281 million).
+  Americas had the most deaths (3.07 million).
+  Africa had the highest case fatality ratio (1.93%).

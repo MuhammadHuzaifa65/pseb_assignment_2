@@ -1,0 +1,8 @@
+who_region_code,who_region_name,total_weekly_reports,active_countries_monitored,total_confirmed_cases,total_confirmed_deaths,case_fatality_ratio_percent
+EURO,European Region,19635,55,281634313,2283474,0.81
+WPRO,Western Pacific Region,12138,34,208675978,421817,0.2
+AMRO,Region of the Americas,16779,47,193380935,3077359,1.59
+SEARO,South-East Asia Region,3927,11,62164646,809446,1.3
+EMRO,Eastern Mediterranean Region,7854,22,23417911,351975,1.5
+AFRO,African Region,16779,47,9051983,174425,1.93
+OTHER,Other / Unassigned,8568,24,1311849,4290,0.33

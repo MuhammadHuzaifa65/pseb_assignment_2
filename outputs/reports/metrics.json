@@ -1,0 +1,26 @@
+{
+    "total_rows": 85680,
+    "total_checks": 4,
+    "passed_checks": 4,
+    "pass_rate": 1.0,
+    "threshold": 0.95,
+    "status": "PASSED",
+    "details": {
+        "types_check": {
+            "passed": true,
+            "message": "Types check passed."
+        },
+        "ranges_check": {
+            "passed": true,
+            "message": "Range check passed."
+        },
+        "uniqueness_check": {
+            "passed": true,
+            "message": "Uniqueness check passed."
+        },
+        "nulls_check": {
+            "passed": true,
+            "message": "Null check passed."
+        }
+    }
+}

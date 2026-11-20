@@ -1,0 +1,6 @@
+Date_reported,Country_code,Country,WHO_region,New_cases,Cumulative_cases,Predicted_New_deaths
+2026-11-08,US,United States of America,AMRO,45000,103500000,492.6
+2026-11-08,PK,Pakistan,EMRO,1200,1580000,24.0
+2026-11-08,DE,Germany,EURO,28000,38400000,347.7
+2026-11-08,JP,Japan,WPRO,35000,33800000,402.5
+2026-11-08,ZA,South Africa,AFRO,2100,4070000,48.1

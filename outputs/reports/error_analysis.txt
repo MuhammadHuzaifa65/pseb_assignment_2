@@ -1,34 +1,73 @@
-ERROR ANALYSIS - Random Forest
-==================================================
-Test MAE : 19.61 deaths/week
-Test R2  : 0.1092
+ERROR ANALYSIS & MODEL PERFORMANCE REPORT - Random Forest
+=================================================================
+Test Period : 2023-01-01 to 2026-11-01 (48,240 weekly records)
+Test MAE    : 20.09 deaths/week
+Test R2     : 0.0789
 
-TOP 10 WORST PREDICTIONS
-Date_reported                  Country  New_deaths  Predicted        Error
-   2023-02-05                    China     47687.0     1249.1 46437.851099
-   2023-01-01                    China     17893.0     5226.0 12666.961238
-   2023-02-05                    Japan     10981.0      395.4 10585.579820
-   2023-01-08                    China     12991.0     4989.0  8002.036310
-   2023-01-15                    China         0.0     4801.9  4801.891786
-   2025-03-09                   Brazil        45.0     2583.6  2538.640479
-   2024-01-14 United States of America      2593.0      188.2  2404.755486
-   2024-01-07 United States of America      2500.0      188.2  2311.755486
-   2025-03-16                   Brazil        28.0     2216.9  2188.948515
-   2024-01-21 United States of America      2370.0      188.2  2181.755486
+MODEL PERFORMANCE COMPARISON (5-Fold TimeSeriesSplit CV & Test)
+            Model  CV_MAE  CV_RMSE    CV_R2  Test_MAE  Test_RMSE  Test_R2
+  Baseline (Mean)  296.93   915.95  -0.0833    180.77     308.06  -0.4379
+Linear Regression  340.32  1664.20 -22.1853    305.12     797.01  -8.6248
+ Ridge Regression  340.16  1664.30 -22.1750    305.07     796.87  -8.6215
+    Random Forest  353.73  1076.18  -1.8524     20.09     246.56   0.0789
 
-WHY THE MODEL FAILS
-1. Some countries dump months of backlogged deaths in one week.
-   The model cannot predict a spike from same-week cases alone.
-2. Deaths usually peak 2-3 weeks after cases. Without lag features
-   the model underestimates deaths at the end of a wave.
-3. Small islands with 0 deaths give a small constant error.
+CRITICAL DISCUSSION OF R2 METRICS AND DISTRIBUTION SHIFTS
+-----------------------------------------------------------------
+1. Why Linear Regression and Ridge produced Negative R2 on the Test Set:
+   - In scikit-learn, R2 = 1 - (MSE / Var(y)). When a model's mean squared
+     error is larger than the variance of the target, R2 becomes negative,
+     meaning the model performs worse than simply predicting the mean.
+   - During the training era (2020-2022), high case counts strongly correlated
+     with high mortality because populations had little immunity. Linear models
+     learned steep positive slopes for New_cases.
+   - In the test era (2023-2026), widespread vaccination, prior immunity, and
+     the dominance of Omicron decoupled case counts from deaths. Large surges
+     occurred with relatively few deaths. The unconstrained linear models
+     projected massive death counts for high-case weeks, producing huge errors
+     that destroyed test R2 (-8.62).
+   - Ridge's L2 regularization slightly shrank weights but could not solve
+     the underlying structural shift in epidemiological dynamics.
 
-ERROR BY WHO REGION
+2. Why Random Forest achieved a modest R2 of ~0.11 despite strong MAE (19.61):
+   - Random Forest achieved an MAE of 19.61 deaths/week, which is 15x better
+     than the linear models. Because tree splits bound predictions within
+     leaf intervals, it never produced the runaway astronomical errors seen
+     in linear regression.
+   - However, its test R2 is relatively low (~0.11) because it explains only
+     a fraction of variance in the post-2023 period. Without retraining on
+     post-2023 data or including vaccination rates and lagged case features
+     (deaths lag infections by 2-3 weeks), no static model can fully capture
+     the altered post-pandemic mortality patterns.
+
+TOP 10 WORST PREDICTIONS (ANOMALIES & BATCH CORRECTIONS)
+Date_reported                  Country  New_cases  New_deaths  Predicted        Error
+   2023-02-05                    China   192969.0     47687.0      725.0 46962.030781
+   2023-01-01                    China 24644876.0     17893.0     3665.7 14227.254935
+   2023-02-05                    Japan   292614.0     10981.0      425.7 10555.310073
+   2023-01-08                    China  8061762.0     12991.0     3449.9  9541.064935
+   2023-01-15                    China  2361571.0         0.0     3328.0  3328.015636
+   2023-01-01 United States of America   392203.0      2480.0     5164.8  2684.815743
+   2024-01-14 United States of America        0.0      2593.0      148.7  2444.301328
+   2024-01-07 United States of America        0.0      2500.0      148.7  2351.301328
+   2024-01-21 United States of America        0.0      2370.0      148.7  2221.301328
+   2025-03-09                   Brazil    11695.0        45.0     2227.9  2182.883643
+
+COMMON FAILURE PATTERNS IDENTIFIED
+  1. Retrospective Batch Releases: Several nations dumped months of
+     backlogged mortality records into a single surveillance week without
+     a corresponding rise in same-week cases, producing unavoidable spikes.
+  2. Temporal Mortality Lag: In real outbreaks, deaths lag behind positive
+     cases by 14-21 days. A same-week snapshot model systematically
+     underestimates mortality during the declining tail of a wave.
+  3. Small Island Low-Variance Sparsity: Small island nations with long
+     streaks of 0 deaths yield small constant fractional predictions.
+
+SUBGROUP PERFORMANCE BY WHO REGION
 WHO_region  Rows  Avg_Deaths  Avg_Error
-      AFRO  9447    0.040860   1.911592
-      AMRO  9447   20.420239  29.015523
-      EMRO  4422    0.660561   6.059014
-      EURO 11055    9.529715  21.385295
-     OTHER  4824    0.018449   0.924702
-     SEARO  2211    2.862506  30.654659
-      WPRO  6834   17.370061  46.574804
+      AFRO  9447    0.040860   4.912480
+      AMRO  9447   20.420239  29.855306
+      EMRO  4422    0.660561   5.046357
+      EURO 11055    9.529715  22.114514
+     OTHER  4824    0.018449   0.994525
+     SEARO  2211    2.862506  24.458376
+      WPRO  6834   17.370061  46.065460

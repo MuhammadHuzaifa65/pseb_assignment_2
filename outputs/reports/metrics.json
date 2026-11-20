@@ -1,11 +1,13 @@
 {
     "total_rows": 85680,
-    "total_checks": 4,
-    "passed_checks": 4,
+    "valid_rows": 85680,
+    "invalid_rows": 0,
     "pass_rate": 1.0,
+    "row_validation_pass_rate": 1.0,
     "threshold": 0.95,
     "status": "PASSED",
-    "details": {
+    "gate_status": "PASSED",
+    "dataset_level_checks": {
         "types_check": {
             "passed": true,
             "message": "Types check passed."
